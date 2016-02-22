@@ -63,7 +63,7 @@ public abstract class Board {
             Tile guessTile = pickEqualOdds(bulk);
             alertGuess(guessTile,(1-(float)remainingN/bulk.size()));
             guessTile.reveal();
-            Edge freshEdge = new Edge(guessTile,2*(int)Math.sqrt(N));
+            Edge freshEdge = new Edge(guessTile,2*(int)Math.sqrt(N),this);
             if (working == null) {
                 working = freshEdge;
             }
@@ -124,7 +124,7 @@ public abstract class Board {
         Tile chosenTile = pickEqualOdds(bestOdds);
         alertGuess(chosenTile,(1-nStatesMined.get(nStatesMined.containsKey(chosenTile)?chosenTile:null).divide(totalMicro,MathContext.DECIMAL64).doubleValue()));
         chosenTile.reveal();
-        Edge freshEdge = new Edge(chosenTile,2*(int)Math.sqrt(N));
+        Edge freshEdge = new Edge(chosenTile,2*(int)Math.sqrt(N),this);
         if (working == null) {
             working = freshEdge;
         }
@@ -170,6 +170,21 @@ public abstract class Board {
             }
         }
         return bestTiles.get((int)(Math.random()*bestTiles.size()));
+    }
+    
+    /**
+     * Allows an Edge to signal the Board that a tile is known.
+     *
+     * @param t A tile which is now known.
+     */
+    public void knownTile(Tile t) {
+        if (t.isRevealed() || t.flagged) {
+            remainingTiles.remove(t);
+            completedTiles.add(t);
+        }
+        if (t.flagged) {
+            remainingN--;
+        }
     }
     
     /**
