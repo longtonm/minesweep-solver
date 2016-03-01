@@ -1,3 +1,4 @@
+import java.util.*;
 import java.io.*;
 
 /**
@@ -10,17 +11,18 @@ public class sample {
         
         int x=30, y=16, n=99;
         boolean printEachStep = false, failure = false, deterministicHelped = false;
-        Board b = new Board(1,1,1);
+        StandardBoard b = new StandardBoard(1,1,1,false);
         for (int i = 0; i < args.length; i++) {
             if (args[i].toLowerCase().equals("detail")) printEachStep = true;
             else if (args[i].toLowerCase().equals("load")) {
-                try {
-                    b = new Board(args[++i]);
+                System.out.println("Reading Board from a file disabled for the time being.");
+/*                try {
+                    b = new StandardBoard(args[++i],true);
                 }
                 catch (IOException e) {
                     System.out.println(e);
-                    b = new Board(1,1,1);
-                }
+                    b = new StandardBoard(1,1,1,false);
+                }*/
             }
             else {
                 try {
@@ -30,14 +32,14 @@ public class sample {
                 } catch (Exception e) {
                     x = 30; y = 16; n = 99;
                 }
-                b = new Board(x,y,n);
+                b = new StandardBoard(x,y,n,true);
             }
         }
         if (args.length == 0) {
             System.out.println("Usage: java sample width height N");
             System.out.println("or java sample filename");
             System.out.println("Default is \"expert\" with dimensions 30 x 16 and 99 mines.");
-            b = new Board(x,y,n);
+            b = new StandardBoard(x,y,n,true);
         }
         while (!b.remainingTiles.isEmpty()) {
             if (b.working != null && b.working.hasWork()) {
@@ -48,7 +50,7 @@ public class sample {
             else {
                 if (deterministicHelped) b.printBoard();
                 try {
-                    b.statGuess(true);
+                    b.statGuess();
                 }
                 catch (BoomException e) {
                     System.out.println("Hit a mine.  Lost.");
@@ -60,14 +62,13 @@ public class sample {
             }
         }
         if (failure) {
-            for (int i = 0; i < b.width; i++) {
-                for (int j = 0; j < b.height; j++) {
-                    if (!(b.grid[i][j].flagged || b.grid[i][j].isRevealed())) {
-                        try {
-                            b.grid[i][j].reveal();
-                        }
-                        catch (BoomException e) {}
+            for (Iterator<Tile> tileIt = b.remainingIterator(); tileIt.hasNext();) {
+                Tile t = tileIt.next();
+                if (!(t.flagged || t.isRevealed())) {
+                    try {
+                        t.reveal();
                     }
+                    catch (BoomException e) {}
                 }
             }
             b.printBoard();

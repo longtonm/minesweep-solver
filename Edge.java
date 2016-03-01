@@ -9,6 +9,7 @@ import java.util.*;
 public class Edge {
     private HashMap<Tile, MineSetList> setsForTile; //would be bad if changes to a Tile altered the hashCode
     private MineSetList unfinished;
+    protected Board ownerBoard;
     
     /**
      * Create an Edge based on a single revealed Tile
@@ -17,8 +18,10 @@ public class Edge {
      *
      * @param   revealed The tile to base this Edge on.
      * @param   estSize The expected number of Tiles that this Edge will contain, used as the size of an internal hash.
+     * @param   b The Board containing the tiles this Edge will study.
      */
-    public Edge(Tile revealed, int estSize) {
+    public Edge(Tile revealed, int estSize, Board b) {
+        ownerBoard = b;
         if (!revealed.isRevealed()) {
             setsForTile = new HashMap<Tile,MineSetList>();
             setsForTile.put(revealed,null);
@@ -178,12 +181,14 @@ public class Edge {
             toProcess.addOrUpdate(new MineSet(finishedTile.adjacentMines(),finishedTile.hiddenNeighbours()));
             toRemoveKnown.addAll(setsForTile.get(finishedTile));
             setsForTile.remove(finishedTile);
+            ownerBoard.knownTile(finishedTile);
             madeChange = true;
         }
         for (Tile finishedTile : newFlaggedTile) {
             finishedTile.flag();
             toRemoveKnown.addAll(setsForTile.get(finishedTile));
             setsForTile.remove(finishedTile);
+            ownerBoard.knownTile(finishedTile);
             madeChange = true;
         }
         for (MineSet toClean : toRemoveKnown) {
