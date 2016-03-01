@@ -9,16 +9,7 @@ import java.math.*;
  * A Minesweeper board.  This contains a grid of all the tiles, and an Edge object used for studying them.
  * The statGuess method belongs to the board class because it requires knowledge of non-edge tiles.
  */
-public class StandardBoard extends Board {
-    protected SquareTile[][] grid;
-    /**
-     * The dimensions of the Board.
-     */
-    public final int width, height;
-    /**
-     * Indicates whether information about guesses should be written to stdout.
-     */
-    public boolean printProbability;
+public class StandardBoard extends TwoDBoard {
     
     /**
      * Create a simple rectangular board
@@ -29,55 +20,28 @@ public class StandardBoard extends Board {
      * @param   probInfo Set to true to print guessing information to stdout.
      */
     public StandardBoard(int width, int height, int n, boolean probInfo) {
+        super(width, height, n);
         this.printProbability = probInfo;
-        this.N = n;
-        remainingN = N;
-        this.width = width;
-        this.height = height;
         int nMines = 0;
-        boolean[][] mineGrid = new boolean[width][height];
-        while (nMines < N) {
-            int x = (int)(Math.random()*width);
-            int y = (int)(Math.random()*height);
-            if (!mineGrid[x][y]) {
-                mineGrid[x][y] = true;
-                nMines++;
-            }
-        }
-        grid = new SquareTile[width][height];
+        ArrayList<ArrayList<Boolean>> mineGrid = setRandomMines(N);
+        grid = initGrid(width, height, Tile.class);
         remainingTiles = new HashSet<Tile>(width*height*4/3+1);
         completedTiles = new LinkedList<Tile>();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 int nAdjacent;
-                if (mineGrid[i][j]) {
+                if (getGrid(i,j,mineGrid)) {
                     nAdjacent = -1;
                 }
                 else {
-                    nAdjacent = 0;
-                    for (int dx = -1; dx < 2; dx++) {
-                        for (int dy = -1; dy < 2; dy++) {
-                            if (i+dx>=0 && j+dy>=0 && i+dx<width && j+dy<height && mineGrid[i+dx][j+dy]) {
-                                nAdjacent++;
-                            }
-                        }
-                    }
+                    nAdjacent = getAdjacent(i,j,mineGrid);
                 }
-                grid[i][j] = new SquareTile(mineGrid[i][j],false,nAdjacent,i,j);
-                remainingTiles.add(grid[i][j]);
+                SquareTile newTile = new SquareTile(getGrid(i,j,mineGrid),false,nAdjacent,i,j);
+                setGrid(i,j,newTile);
+                remainingTiles.add(newTile);
             }
         }
-        for (int i = 0; i < width; i++) {
-            for (int j = 0; j < height; j++) {
-                for (int dx = -1; dx < 2; dx++) {
-                    for (int dy = -1; dy < 2; dy++) {
-                        if (i+dx>=0 && i+dx<width && j+dy>=0 && j+dy<height) {
-                            grid[i][j].neighbours.add(grid[i+dx][j+dy]);
-                        }
-                    }
-                }
-            }
-        }
+        linkNeighbours();
     }
     
     /**
@@ -88,7 +52,7 @@ public class StandardBoard extends Board {
      * @param   filename The path to read from
      * @param   probInfo Set to true to print guessing information to stdout.
      * @throws  IOException If the file "filename" cannot be properly opened or read.
-     */
+     *
     public StandardBoard(String filename, boolean probInfo) throws IOException {
         this.printProbability = probInfo;
         FileReader rawfile = new FileReader(filename);
@@ -145,38 +109,8 @@ public class StandardBoard extends Board {
         height = grid[0].length;
         N = mineCount;
         remainingN = N;
-        for (i = 0; i < width; i++) {
-            for (j = 0; j < height; j++) {
-                for (int dx = -1; dx < 2; dx++) {
-                    for (int dy = -1; dy < 2; dy++) {
-                        if (i+dx>=0 && i+dx<width && j+dy>=0 && j+dy<height) {
-                            grid[i][j].neighbours.add(grid[i+dx][j+dy]);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * If information about guessing is to be shown, then do so.
-     *
-     * @param   t The Tile which is about to be guessed.
-     * @param   odds The probability that the guess is safe.
-     */
-    public void alertGuess(Tile t, double odds) {
-        if (printProbability) {
-            boolean printed = false;
-            for (int i = 0; !printed && i < grid.length; i++) {
-                for (int j = 0; j < grid[i].length && !printed; j++) {
-                    if (grid[i][j] == t) {
-                        System.out.println("Guessing "+i+","+j+" with "+(odds*100)+"% chance of success.");
-                        printed = true;
-                    }
-                }
-            }
-        }
-    }
+        linkNeighbours();
+    }*/
     
     /**
      * Write this Board to stdout
@@ -185,13 +119,8 @@ public class StandardBoard extends Board {
         Tile t;
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                t = grid[i][j];
-                if (t == null) System.out.print("#");
-                else if (t.isRevealed() && t.adjacentMines() < 0) System.out.print("X");
-                else if (t.isRevealed() && !t.flagged) System.out.print((t.adjacentMines()==0?" ":""+t.adjacentMines()));
-                else if (t.isRevealed() && t.flagged) System.out.print("X");
-                else if (t.flagged) System.out.print("*");
-                else System.out.print(".");
+                t = getGrid(i,j);
+                System.out.print(Tile.toString(t));
             }
             System.out.println();
         }

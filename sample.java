@@ -1,3 +1,4 @@
+import java.util.*;
 import java.io.*;
 
 /**
@@ -14,13 +15,14 @@ public class sample {
         for (int i = 0; i < args.length; i++) {
             if (args[i].toLowerCase().equals("detail")) printEachStep = true;
             else if (args[i].toLowerCase().equals("load")) {
-                try {
+                System.out.println("Reading Board from a file disabled for the time being.");
+/*                try {
                     b = new StandardBoard(args[++i],true);
                 }
                 catch (IOException e) {
                     System.out.println(e);
                     b = new StandardBoard(1,1,1,false);
-                }
+                }*/
             }
             else {
                 try {
@@ -60,14 +62,13 @@ public class sample {
             }
         }
         if (failure) {
-            for (int i = 0; i < b.width; i++) {
-                for (int j = 0; j < b.height; j++) {
-                    if (!(b.grid[i][j].flagged || b.grid[i][j].isRevealed())) {
-                        try {
-                            b.grid[i][j].reveal();
-                        }
-                        catch (BoomException e) {}
+            for (Iterator<Tile> tileIt = b.remainingIterator(); tileIt.hasNext();) {
+                Tile t = tileIt.next();
+                if (!(t.flagged || t.isRevealed())) {
+                    try {
+                        t.reveal();
                     }
+                    catch (BoomException e) {}
                 }
             }
             b.printBoard();

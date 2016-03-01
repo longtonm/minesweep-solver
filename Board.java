@@ -14,11 +14,24 @@ import java.math.*;
 public abstract class Board {
     protected Edge working;
     protected Collection<Tile> remainingTiles, completedTiles;
-    protected int remainingN;
     /**
      * The total number of mines in this Board.
      */
-    protected int N;
+    public final int N;
+    /**
+     * The number of mines not yet identified and marked as completed.
+     */
+    protected int remainingN;
+    
+    /**
+     * Partial constructor for use by subclasses to set N.
+     *
+     * @param n THe number of mines in the board.
+     */
+    protected Board(int n) {
+        N = n;
+        remainingN = n;
+    }
     
     /**
      * Reveal the tile with the lowest probability of being mined
@@ -185,6 +198,13 @@ public abstract class Board {
         if (t.flagged) {
             remainingN--;
         }
+    }
+    
+    /**
+     * @return An Iterator of the remaining tiles in this Board.
+     */
+    public Iterator<Tile> remainingIterator() {
+        return remainingTiles.iterator();
     }
     
     /**

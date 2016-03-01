@@ -18,6 +18,7 @@ public class Edge {
      *
      * @param   revealed The tile to base this Edge on.
      * @param   estSize The expected number of Tiles that this Edge will contain, used as the size of an internal hash.
+     * @param   b The Board containing the tiles this Edge will study.
      */
     public Edge(Tile revealed, int estSize, Board b) {
         ownerBoard = b;
