@@ -1,6 +1,5 @@
 import java.lang.*;
 import java.util.*;
-import java.io.*;
 import java.math.*;
 
 //It would be interesting to allow for more abstract graphs, but for now this will be a 2-D rectangular grid

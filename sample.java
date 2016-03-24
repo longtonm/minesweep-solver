@@ -8,21 +8,23 @@ import java.io.*;
  */
 public class sample {
     public static void main(String[] args) {
-        
         int x=30, y=16, n=99;
         boolean printEachStep = false, failure = false, deterministicHelped = false;
-        StandardBoard b = new StandardBoard(1,1,1,false);
+        Board b = new StandardBoard(1,1,1,false);
         for (int i = 0; i < args.length; i++) {
             if (args[i].toLowerCase().equals("detail")) printEachStep = true;
             else if (args[i].toLowerCase().equals("load")) {
-                System.out.println("Reading Board from a file disabled for the time being.");
-/*                try {
-                    b = new StandardBoard(args[++i],true);
+                char[][] file;
+                try {
+                    file = TextBoard.readBoard(args[++i]);
+
                 }
                 catch (IOException e) {
                     System.out.println(e);
-                    b = new StandardBoard(1,1,1,false);
-                }*/
+                    file = new char[1][1];
+                    file[0][0] = '*';
+                }
+                b = new StandardBoard(file,true);
             }
             else {
                 try {
@@ -45,10 +47,10 @@ public class sample {
             if (b.working != null && b.working.hasWork()) {
                 boolean doPrint = b.working.compareOne();
                 deterministicHelped = deterministicHelped || doPrint;
-                if (printEachStep && doPrint) b.printBoard();
+                if (printEachStep && doPrint) tryPrint(b);
             }
             else {
-                if (deterministicHelped) b.printBoard();
+                if (deterministicHelped) tryPrint(b);
                 try {
                     b.statGuess();
                 }
@@ -57,7 +59,7 @@ public class sample {
                     failure = true;
                     break;
                 }
-                b.printBoard();
+                tryPrint(b);
                 deterministicHelped = false;
             }
         }
@@ -71,10 +73,19 @@ public class sample {
                     catch (BoomException e) {}
                 }
             }
-            b.printBoard();
+            tryPrint(b);
         }
         else {
             System.out.println("Won!");
+        }
+    }
+    
+    public static void tryPrint(Board b) {
+        try {
+            ((TextBoard)b).printBoard();
+        }
+        catch (ClassCastException e) {
+            System.out.println("Output not possible for this type of board.");
         }
     }
 }

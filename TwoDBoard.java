@@ -59,7 +59,6 @@ public abstract class TwoDBoard extends Board {
     
     /**
      * Find the number of adjacent mines to any site in a boolean grid.
-     * The internal workings currently assume a square neighbour structure, but this is likely to change in the future so that overriding the definition of "neighbour" that this implies is simpler.
      *
      * @param x The x coordinate of the site to check neighbours of.
      * @param y The y coordinate of the site to check neighbours of.
@@ -68,14 +67,9 @@ public abstract class TwoDBoard extends Board {
      */
     public int getAdjacent(int x, int y, List<? extends List<Boolean>> matrix) {
         int n = 0;
-        for (int dx = -1; dx < 2; dx++) {
-            for (int dy = -1; dy < 2; dy++) {
-                try { //Not very efficient, but quite general.  Subclasses could override it for performance.
-                    if (getGrid(x+dx,y+dy,matrix)) {
-                        n++;
-                    }
-                }
-                catch(IndexOutOfBoundsException e) {}
+        for (GridCoordinate z : neighbourCoordinates(x,y)) {
+            if (getGrid(z.x,z.y,matrix)) {
+                n++;
             }
         }
         return n;
@@ -84,24 +78,27 @@ public abstract class TwoDBoard extends Board {
     /**
      * Connect each Tile in this board's underlying grid to all of its neighbours.
      * This adds each Tile's neighbours to the neighbours List in the Tile.
-     * The internal workings currently assume a square neighbour structure, but this is likely to change in the future so that overriding the definition of "neighbour" that this implies is simpler.
      */
     public void linkNeighbours() {
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                for (int dx = -1; dx < 2; dx++) {
-                    for (int dy = -1; dy < 2; dy++) {
-                        try { //Not very efficient, but quite general.  Subclasses could override it for performance.
-                            if ((dx != 0 || dy != 0) && getGrid(i,j) != null && getGrid(i+dx,j+dy) != null) {
-                                getGrid(i,j).neighbours.add(getGrid(i+dx,j+dy));
-                            }
-                        }
-                        catch (IndexOutOfBoundsException e) {}
+                for (GridCoordinate z : neighbourCoordinates(i,j)) {
+                    if (getGrid(i,j) != null && getGrid(z.x,z.y) != null) {
+                        getGrid(i,j).neighbours.add(getGrid(z.x,z.y));
                     }
                 }
             }
         }
     }
+
+    /**
+     * Get a list of all grid points that are neighbours of a given point.
+     *
+     * @param i The x coordinate of the site to find neighbours of.
+     * @param j The y coordinate of the site to find neighbours of.
+     * @return A list of GridCoordinate objects representing the neighbours.
+     */
+    public abstract LinkedList<GridCoordinate> neighbourCoordinates(int i, int j);
     
     /**
      * Get the tile at a specified location in this board's underlying grid.
@@ -205,6 +202,14 @@ public abstract class TwoDBoard extends Board {
                     }
                 }
             }
+        }
+    }
+        
+    public class GridCoordinate {
+        public int x,y;
+        public GridCoordinate(int i, int j) {
+            x = i;
+            y = j;
         }
     }
 }

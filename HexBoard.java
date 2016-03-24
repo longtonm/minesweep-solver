@@ -5,20 +5,19 @@ import java.math.*;
 /**
  * @author  Matheson Longton
  *
- * A Minesweeper board.  This contains a grid of all the tiles, and an Edge object used for studying them.
- * The WrapSquareBoard represents a board with a standard square grid (as in StandardBoard) that wraps around so that there are no sides.
+ * A Minesweeper board with a hexagonal grid.  Each tile is adjacent to its six neighbours.
  */
-public class WrapSquareBoard extends TwoDBoard implements TextBoard {
-        
+public class HexBoard extends TwoDBoard implements TextBoard {
+    
     /**
-     * Create a wrapped rectangular board
+     * Create a board with a hexagonal grid
      *
      * @param   width The Board's width
      * @param   height The Board's height
      * @param   n The number of mines to be placed
      * @param   probInfo Set to true to print guessing information to stdout.
      */
-    public WrapSquareBoard(int width, int height, int n, boolean probInfo) {
+    public HexBoard(int width, int height, int n, boolean probInfo) {
         super(width, height, n);
         this.printProbability = probInfo;
         int nMines = 0;
@@ -44,6 +43,33 @@ public class WrapSquareBoard extends TwoDBoard implements TextBoard {
     }
     
     /**
+     * Create a Board from a text file.
+     *
+     * At present, the spaces that are inserted in the output to give a hexagonal grid should be removed.  This may change in future versions.
+     *
+     * @param   file An array containing the contents of the file as produced by TextBoard.readBoard(fileName).
+     * @param   probInfo Set to true to print guessing information to stdout.
+     */
+    public HexBoard(char[][] file, boolean probInfo) {
+        super(file[0].length, file.length, TextBoard.mineCount(file));
+        this.printProbability = probInfo;
+        grid = initGrid(width, height, Tile.class);
+        int mineCount = 0;
+        remainingTiles = new HashSet<Tile>((int)(TextBoard.tileCount(file)*4/3+1));
+        completedTiles = new LinkedList<Tile>();
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                SquareTile newTile = TextBoard.makeTile(file[j][i],i,j);
+                if (newTile != null) {
+                    setGrid(i,j,newTile);
+                    remainingTiles.add(newTile);
+                }
+            }
+        }
+        linkNeighbours();
+    }
+    
+    /**
      * Get a list of all grid points that are neighbours of a given point.
      *
      * @param i The x coordinate of the site to find neighbours of.
@@ -52,8 +78,10 @@ public class WrapSquareBoard extends TwoDBoard implements TextBoard {
      */
     public LinkedList<GridCoordinate> neighbourCoordinates(int i, int j) {
         LinkedList<GridCoordinate> result = new LinkedList<GridCoordinate>();
-        for (int x = i-1; x < i+2; x++) {
-            for (int y = j-1; y < j+2; y++) {
+        for (int y = j-1; y < j+2; y++) {
+            if (y < 0 || y >= height) continue;
+            for (int x = (y==j ? i-1 : i-1+(j%2)); x < (y==j ? i+2 : i+1+(j%2)); x++) {
+                if (x < 0 || x >= width) continue;
                 if (x != i || y != j) {
                     result.add(new GridCoordinate(x,y));
                 }
@@ -63,40 +91,19 @@ public class WrapSquareBoard extends TwoDBoard implements TextBoard {
     }
     
     /**
-     * Get the item at (x%width, y%height) in a grid.
-     *
-     * @param x The first coordinate.
-     * @param y The second coordinate.
-     * @param matrix The grid to look in.
-     * @param <E> THe type stored by this grid.
-     * @return The item at (x,y).
-     */
-    public <E> E getGrid(int x, int y, List<? extends List<E>> matrix) {
-        return matrix.get((x+width)%width).get((y+height)%height);
-    }
-    /**
-     * Set the item at (x%width, y%height) in a grid.
-     *
-     * @param x The first coordinate.
-     * @param y The second coordinate.
-     * @param item The item to replace the value at (x,y).
-     * @param matrix The grid to place the item in.
-     * @param <E> THe type stored by this grid.
-     * @return The item previously at (x%width, y%height), as specified by the List interface.
-     */
-    public <E> E setGrid(int x, int y, E item, List<? extends List<E>> matrix) {
-        return matrix.get((x+width)%width).set((y+height)%height,item);
-    }
-    
-    /**
      * Write this Board to stdout
      */
     public void printBoard() {
         Tile t;
-        for (int j = 0; j <= height; j++) {
-            for (int i = 0; i <= width; i++) {
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
                 t = getGrid(i,j);
-                System.out.print(Tile.toString(t));
+                if (j % 2 == 0) {
+                    System.out.print(Tile.toString(t)+" ");
+                }
+                else {
+                    System.out.print(" "+Tile.toString(t));
+                }
             }
             System.out.println();
         }
