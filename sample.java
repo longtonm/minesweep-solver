@@ -103,13 +103,13 @@ public class sample {
                 return;
             }
             else if (cl.hasOption("x")) {
-                b = new HexBoard(x,y,n,true);
+                b = new HexBoard(x,y,n,cl.hasOption("c"),true);
             }
             else if (cl.hasOption("w")) {
-                b = new WrapSquareBoard(x,y,n,true);
+                b = new WrapSquareBoard(x,y,n,cl.hasOption("c"),true);
             }
             else {
-                b = new StandardBoard(x,y,n,true);
+                b = new StandardBoard(x,y,n,cl.hasOption("c"),true);
             }
         }
         while (!b.remainingTiles.isEmpty()) {
@@ -194,19 +194,23 @@ public class sample {
                         .longOpt("percentage")
                         .desc("Set the number of mines as a percentage of the number of tiles.")
                         .hasArg()
-                        .type(new Double(0).getClass())//Class.forName("Double"))
+                        .type(Double.class)
                         .build());
         nOpts.addOption(Option.builder("n")
                         .longOpt("number")
                         .desc("Set the total number of mines.")
                         .hasArg()
-                        .type(new Integer(0).getClass())//Class.forName("Integer"))
+                        .type(Integer.class)
                         .build());
         opts.addOptionGroup(nOpts);
         opts.addOption(Option.builder("s")
                        .longOpt("size")
                        .desc("Set the dimensions of the board: x*y.")
                        .numberOfArgs(2)
+                       .build());
+        opts.addOption(Option.builder("c")
+                       .longOpt("clear")
+                       .desc("Clear one safe tile to start.")
                        .build());
         opts.addOption(Option.builder("d")
                        .longOpt("detail")

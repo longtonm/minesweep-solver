@@ -104,15 +104,15 @@ public interface TextBoard {
     static SquareTile makeTile(char chr, int i, int j) {
         SquareTile newTile;
         switch (chr) {
-            case ' ': case '0': case '@':
+            case ' ': case '0':
                 newTile = new SquareTile(false,false,0,i,j);
                 break;
-            case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
+            case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
                 newTile = new SquareTile(false,false,chr-48,i,j);
                 break;
-                /*case '@':
-                 newTile = new SquareTile(false,true,0,i,j);
-                 break;*/
+            case '@':
+                newTile = new SquareTile(false,true,0,i,j);
+                break;
             case '*': case 'X':
                 newTile = new SquareTile(true,false,-1,i,j);
                 break;
@@ -121,5 +121,34 @@ public interface TextBoard {
                 break;
         }
         return newTile;
+    }
+    
+    LinkedList<TwoDBoard.GridCoordinate> neighbourCoordinates(int i, int j);
+    
+    /**
+     * Scan an array of characters and ensure that the numbers of adjacent mines are all correct.
+     * If any of the numbers are off they will be replaced by correct ones.  This makes it safe to read a file with only the positions of the mines listed.
+     *
+     * @param file A character array to validate.
+     * @return true if changes needed to be made.
+     */
+    default boolean checkCounts(char[][] file) {
+        boolean madeChange = false;
+        for (int j = 0; j < file.length; j++) {
+            for (int i = 0; i < file[j].length; i++) {
+                if (file[j][i] == '*' || file[j][i] == 'X' || file[j][i] == '#' || file[j][i] == '\u0000') continue;
+                int nMines = 0;
+                for (TwoDBoard.GridCoordinate z : neighbourCoordinates(i,j)) {
+                    if (file[z.y][z.x] == '*' || file[z.y][z.x] == 'X') {
+                        nMines++;
+                    }
+                }
+                if (file[j][i] != nMines+48 && !((file[j][i] == ' ' || file[j][i] == '@') && nMines == 0)) {
+                    madeChange = true;
+                    file[j][i] = (char)(nMines+48);
+                }
+            }
+        }
+        return madeChange;
     }
 }

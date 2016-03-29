@@ -75,14 +75,15 @@ public abstract class Board {
             Tile guessTile = pickEqualOdds(bulk);
             alertGuess(guessTile,(1-(float)remainingN/bulk.size()));
             guessTile.reveal();
-            Edge freshEdge = new Edge(guessTile,2*(int)Math.sqrt(N),this);
+            addWorkingTile(guessTile);
+            /*Edge freshEdge = new Edge(guessTile,2*(int)Math.sqrt(N),this);
             if (working == null) {
                 working = freshEdge;
             }
             else {
                 working.add(freshEdge);
                 working.knownTile(guessTile);
-            }
+            }*/
             return true;
         }
         BigDecimal totalMicro = new BigDecimal(0);
@@ -136,14 +137,15 @@ public abstract class Board {
         Tile chosenTile = pickEqualOdds(bestOdds);
         alertGuess(chosenTile,(1-nStatesMined.get(nStatesMined.containsKey(chosenTile)?chosenTile:null).divide(totalMicro,MathContext.DECIMAL64).doubleValue()));
         chosenTile.reveal();
-        Edge freshEdge = new Edge(chosenTile,2*(int)Math.sqrt(N),this);
+        addWorkingTile(chosenTile);
+        /*Edge freshEdge = new Edge(chosenTile,2*(int)Math.sqrt(N),this);
         if (working == null) {
             working = freshEdge;
         }
         else {
             working.add(freshEdge);
             working.knownTile(chosenTile);
-        }
+        }*/
         return true;
     }
     
@@ -190,11 +192,12 @@ public abstract class Board {
      * @param t A tile which is now known.
      */
     public void knownTile(Tile t) {
+        boolean wasHere = false;
         if (t.isRevealed() || t.flagged) {
-            remainingTiles.remove(t);
+            wasHere = remainingTiles.remove(t);
             completedTiles.add(t);
         }
-        if (t.flagged) {
+        if (t.flagged && wasHere) {
             remainingN--;
         }
     }
@@ -237,5 +240,21 @@ public abstract class Board {
             result = result.divide(new BigDecimal(i),MathContext.DECIMAL64);
         }
         return result;
+    }
+    
+    /**
+     * Add a tile's information to the working edge.  If working does not exist yet then create it.
+     *
+     * @param t A revealed tile to be added to the working edge.
+     */
+    public void addWorkingTile(Tile t) {
+        Edge freshEdge = new Edge(t,2*(int)Math.sqrt(N),this);
+        if (working == null) {
+            working = freshEdge;
+        }
+        else {
+            working.add(freshEdge);
+            working.knownTile(t);
+        }
     }
 }

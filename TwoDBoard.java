@@ -90,6 +90,22 @@ public abstract class TwoDBoard extends Board {
             }
         }
     }
+    
+    public Tile pickRandomStart(List<? extends List<Boolean>> mGrid) {
+        if (remainingN == remainingTiles.size()) return null;
+        ArrayList<Tile> validCandidates = new ArrayList<Tile>(remainingTiles.size()-N);
+        for (int neighbourCount = 0; validCandidates.size() == 0; neighbourCount++) {
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < height; y++) {
+                    if (!getGrid(x,y,mGrid) && getAdjacent(x,y,mGrid) == neighbourCount) {
+                        validCandidates.add(getGrid(x,y));
+                    }
+                }
+            }
+        }
+        int whichCandidate = (int)(Math.random()*validCandidates.size());
+        return validCandidates.get(whichCandidate);
+    }
 
     /**
      * Get a list of all grid points that are neighbours of a given point.
@@ -122,7 +138,7 @@ public abstract class TwoDBoard extends Board {
      * @return The item at (x,y).
      * @throws IndexOutOfBoundsException if the coordinates (x,y) are not an allowed location for this board.
      */
-    public <E> E getGrid(int x, int y, List<? extends List<E>> matrix) { //or List<? extends List<E>> ?
+    public <E> E getGrid(int x, int y, List<? extends List<E>> matrix) {
         return matrix.get(x).get(y);
     }
     /**

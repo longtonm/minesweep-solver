@@ -15,9 +15,10 @@ public class HexBoard extends TwoDBoard implements TextBoard {
      * @param   width The Board's width
      * @param   height The Board's height
      * @param   n The number of mines to be placed
+     * @param   safeStart Set to true to pick a clear starting tile which will be revealed initially.
      * @param   probInfo Set to true to print guessing information to stdout.
      */
-    public HexBoard(int width, int height, int n, boolean probInfo) {
+    public HexBoard(int width, int height, int n, boolean safeStart, boolean probInfo) {
         super(width, height, n);
         this.printProbability = probInfo;
         int nMines = 0;
@@ -40,6 +41,13 @@ public class HexBoard extends TwoDBoard implements TextBoard {
             }
         }
         linkNeighbours();
+        if (safeStart) {
+            Tile toStart = pickRandomStart(mineGrid);
+            if (toStart != null) {
+                toStart.reveal();
+                addWorkingTile(toStart);
+            }
+        }
     }
     
     /**
@@ -53,20 +61,30 @@ public class HexBoard extends TwoDBoard implements TextBoard {
     public HexBoard(char[][] file, boolean probInfo) {
         super(file[0].length, file.length, TextBoard.mineCount(file));
         this.printProbability = probInfo;
+        if (checkCounts(file)) {
+            System.err.println("The file contained inconsistent adjacent mine counts.  Corrected counts will be used instead.");
+        }
         grid = initGrid(width, height, Tile.class);
         int mineCount = 0;
         remainingTiles = new HashSet<Tile>((int)(TextBoard.tileCount(file)*4/3+1));
         completedTiles = new LinkedList<Tile>();
+        LinkedList<Tile> startTiles = new LinkedList<Tile>();
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
                 SquareTile newTile = TextBoard.makeTile(file[j][i],i,j);
                 if (newTile != null) {
                     setGrid(i,j,newTile);
                     remainingTiles.add(newTile);
+                    if (newTile.isRevealed()) {
+                        startTiles.add(newTile);
+                    }
                 }
             }
         }
         linkNeighbours();
+        for (Tile toStart : startTiles) {
+            addWorkingTile(toStart);
+        }
     }
     
     /**

@@ -16,9 +16,10 @@ public class WrapSquareBoard extends TwoDBoard implements TextBoard {
      * @param   width The Board's width
      * @param   height The Board's height
      * @param   n The number of mines to be placed
+     * @param   safeStart Set to true to pick a clear starting tile which will be revealed initially.
      * @param   probInfo Set to true to print guessing information to stdout.
      */
-    public WrapSquareBoard(int width, int height, int n, boolean probInfo) {
+    public WrapSquareBoard(int width, int height, int n, boolean safeStart, boolean probInfo) {
         super(width, height, n);
         this.printProbability = probInfo;
         int nMines = 0;
@@ -41,6 +42,13 @@ public class WrapSquareBoard extends TwoDBoard implements TextBoard {
             }
         }
         linkNeighbours();
+        if (safeStart) {
+            Tile toStart = pickRandomStart(mineGrid);
+            if (toStart != null) {
+                toStart.reveal();
+                addWorkingTile(toStart);
+            }
+        }
     }
     
     /**
